@@ -11,16 +11,8 @@
 			"Rev": "5fac954758f5aa282478dc07fbb8709fe9575184"
 		},
 		{
-			"ImportPath": "github.com/cloudfoundry-incubator/cf-test-helpers/cf",
-			"Rev": "5e38da862fe8002cee5a0e1d7c7740e3e3af1ac3"
-		},
-		{
-			"ImportPath": "github.com/cloudfoundry-incubator/cf-test-helpers/runner",
-			"Rev": "5e38da862fe8002cee5a0e1d7c7740e3e3af1ac3"
-		},
-		{
-			"ImportPath": "github.com/cloudfoundry-incubator/cf-test-helpers/services/context_setup",
-			"Rev": "5e38da862fe8002cee5a0e1d7c7740e3e3af1ac3"
+			"ImportPath": "github.com/cloudfoundry-incubator/cf-test-helpers",
+			"Rev": "fef024da8c06fb63045693ca7a1376a118854ad8"
 		},
 		{
 			"ImportPath": "github.com/onsi/ginkgo",

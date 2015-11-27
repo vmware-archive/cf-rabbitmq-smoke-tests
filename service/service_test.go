@@ -8,7 +8,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/runner"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/services/context_setup"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -33,11 +32,11 @@ var _ = Describe("RabbitMQ Service", func() {
 
 	BeforeEach(func() {
 		appName = randomName()
-		Eventually(cf.Cf("push", appName, "-m", "256M", "-p", appPath, "-s", "cflinuxfs2", "-no-start"), context_setup.ScaledTimeout(timeout)).Should(Exit(0))
+		Eventually(cf.Cf("push", appName, "-m", "256M", "-p", appPath, "-s", "cflinuxfs2", "-no-start"), config.ScaledTimeout(timeout)).Should(Exit(0))
 	})
 
 	AfterEach(func() {
-		Eventually(cf.Cf("delete", appName, "-f"), context_setup.ScaledTimeout(timeout)).Should(Exit(0))
+		Eventually(cf.Cf("delete", appName, "-f"), config.ScaledTimeout(timeout)).Should(Exit(0))
 	})
 
 	AssertLifeCycleBehavior := func(planName string) {
@@ -45,31 +44,31 @@ var _ = Describe("RabbitMQ Service", func() {
 			serviceInstanceName := randomName()
 
 			createServiceSession := cf.Cf("create-service", config.ServiceName, planName, serviceInstanceName)
-			createServiceSession.Wait(context_setup.ScaledTimeout(timeout))
+			createServiceSession.Wait(config.ScaledTimeout(timeout))
 
 			createServiceStdout := createServiceSession.Out
 
 			select {
 			case <-createServiceStdout.Detect("FAILED"):
-				Eventually(createServiceSession, context_setup.ScaledTimeout(timeout)).Should(Say("10001"))
-				Eventually(createServiceSession, context_setup.ScaledTimeout(timeout)).Should(Exit(1))
+				Eventually(createServiceSession, config.ScaledTimeout(timeout)).Should(Say("10001"))
+				Eventually(createServiceSession, config.ScaledTimeout(timeout)).Should(Exit(1))
 				fmt.Println("No Plan Instances available for testing plan:", planName)
 			case <-createServiceStdout.Detect("OK"):
-				Eventually(createServiceSession, context_setup.ScaledTimeout(timeout)).Should(Exit(0))
-				Eventually(cf.Cf("bind-service", appName, serviceInstanceName), context_setup.ScaledTimeout(timeout)).Should(Exit(0))
-				Eventually(cf.Cf("start", appName), context_setup.ScaledTimeout(5*time.Minute)).Should(Exit(0))
+				Eventually(createServiceSession, config.ScaledTimeout(timeout)).Should(Exit(0))
+				Eventually(cf.Cf("bind-service", appName, serviceInstanceName), config.ScaledTimeout(timeout)).Should(Exit(0))
+				Eventually(cf.Cf("start", appName), config.ScaledTimeout(5*time.Minute)).Should(Exit(0))
 
 				uri := appUri(appName) + "/store"
 				fmt.Println("Posting to url: ", uri)
-				Eventually(runner.Curl("-d", "myvalue", "-X", "POST", uri, "-k", "-f"), context_setup.ScaledTimeout(timeout), retryInterval).Should(Exit(0))
+				Eventually(runner.Curl("-d", "myvalue", "-X", "POST", uri, "-k", "-f"), config.ScaledTimeout(timeout), retryInterval).Should(Exit(0))
 				fmt.Println("\n")
 
 				fmt.Println("Getting from url: ", uri)
-				Eventually(runner.Curl(uri, "-k"), context_setup.ScaledTimeout(timeout), retryInterval).Should(Say("myvalue"))
+				Eventually(runner.Curl(uri, "-k"), config.ScaledTimeout(timeout), retryInterval).Should(Say("myvalue"))
 				fmt.Println("\n")
 
-				Eventually(cf.Cf("unbind-service", appName, serviceInstanceName), context_setup.ScaledTimeout(timeout)).Should(Exit(0))
-				Eventually(cf.Cf("delete-service", "-f", serviceInstanceName), context_setup.ScaledTimeout(timeout)).Should(Exit(0))
+				Eventually(cf.Cf("unbind-service", appName, serviceInstanceName), config.ScaledTimeout(timeout)).Should(Exit(0))
+				Eventually(cf.Cf("delete-service", "-f", serviceInstanceName), config.ScaledTimeout(timeout)).Should(Exit(0))
 			}
 			createServiceStdout.CancelDetects()
 
