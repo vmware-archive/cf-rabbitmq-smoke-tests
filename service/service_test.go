@@ -50,7 +50,7 @@ var _ = Describe("RabbitMQ Service", func() {
 
 			select {
 			case <-createServiceStdout.Detect("FAILED"):
-				Eventually(createServiceSession, config.ScaledTimeout(timeout)).Should(Say("10001"))
+				Eventually(createServiceSession, config.ScaledTimeout(timeout)).Should(Say("instance limit for this service has been reached"))
 				Eventually(createServiceSession, config.ScaledTimeout(timeout)).Should(Exit(1))
 				fmt.Println("No Plan Instances available for testing plan:", planName)
 			case <-createServiceStdout.Detect("OK"):
