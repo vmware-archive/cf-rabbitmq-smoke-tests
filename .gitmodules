@@ -3,16 +3,16 @@
 	url = https://github.com/pivotal-cf/rabbit-example-app.git
 [submodule "vendor/github.com/onsi/gomega"]
 	path = vendor/github.com/onsi/gomega
-	url = github.com:onsi/gomega
+	url = https://github.com/onsi/gomega
 [submodule "vendor/github.com/onsi/ginkgo"]
 	path = vendor/github.com/onsi/ginkgo
-	url = github.com:onsi/ginkgo
+	url = https://github.com/onsi/ginkgo
 [submodule "vendor/github.com/pborman/uuid"]
 	path = vendor/github.com/pborman/uuid
-	url = github.com:pborman/uuid
+	url = https://github.com/pborman/uuid
 [submodule "vendor/github.com/cloudfoundry-incubator/cf-test-helpers"]
 	path = vendor/github.com/cloudfoundry-incubator/cf-test-helpers
 	url = https://github.com/cloudfoundry-incubator/cf-test-helpers
 [submodule "vendor/gopkg.in/yaml.v2"]
 	path = vendor/gopkg.in/yaml.v2
-	url = http://github.com/go-yaml/yaml
+	url = https://github.com/go-yaml/yaml
