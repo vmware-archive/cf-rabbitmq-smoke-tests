@@ -30,7 +30,7 @@ var certIgnoringHTTPClient = herottp.New(herottp.Config{
 
 func findURL(cliOutput string) string {
 	for _, line := range strings.Split(cliOutput, "\n") {
-		if strings.HasPrefix(line, "urls:") {
+		if strings.HasPrefix(line, "routes:") {
 			return strings.Fields(line)[1]
 		}
 	}
