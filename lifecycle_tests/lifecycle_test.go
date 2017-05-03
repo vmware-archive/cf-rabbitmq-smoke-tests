@@ -3,105 +3,83 @@ package lifecycle_tests
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
-	"github.com/onsi/gomega/gexec"
 	"github.com/pborman/uuid"
+	"github.com/pivotal-cf/cf-rabbitmq-smoke-tests/cf"
 	"github.com/pivotal-cf/cf-rabbitmq-smoke-tests/lifecycle_tests/cf_helpers"
 )
 
 var _ = Describe("The service broker lifecycle", func() {
-	AfterEach(func() {
-		Eventually(cf.Cf("delete", testAppName, "-f", "-r"), cf_helpers.ThirtySecondTimeout).Should(gexec.Exit())
+	var (
+		appName     string
+		appPath     string
+		serviceName string
+	)
+
+	BeforeEach(func() {
+		appName = fmt.Sprintf("rmq-smoke-test-app-%d", GinkgoParallelNode())
+		appPath = "../assets/rabbit-example-app"
+		serviceName = fmt.Sprintf("rmq-smoke-test-instance-%s", uuid.New()[:18])
 	})
 
-	newServiceName := func() string {
-		return fmt.Sprintf("instance-%s", uuid.New()[:18])
-	}
+	AfterEach(func() {
+		cf.DeleteApp(appName)
+	})
 
-	createService := func(servicePlan, serviceName, arbitraryParams string) {
-		cfArgs := []string{"create-service", serviceOffering, servicePlan, serviceName}
-		if arbitraryParams != "" {
-			cfArgs = append(cfArgs, "-c", arbitraryParams)
-		}
+	lifecycle := func(t TestPlan) {
+		It(fmt.Sprintf("plan: '%s', with arbitrary params: '%s', will update to: '%s'", t.Name, string(t.ArbitraryParams), t.UpdateToPlan), func() {
+			cf.CreateService(rabbitmqConfig.ServiceOffering, t.Name, serviceName, string(t.ArbitraryParams))
 
-		Eventually(cf.Cf(cfArgs...), cf_helpers.FiveMinuteTimeout).Should(gexec.Exit(0))
-		cf_helpers.AwaitServiceCreation(serviceName)
-	}
+			appURL := deployAppAndBindService(appName, serviceName, appPath)
 
-	unbindService := func(serviceName string) {
-		Eventually(cf.Cf("unbind-service", testAppName, serviceName), cf_helpers.FiveMinuteTimeout).Should(gexec.Exit(0))
-	}
-
-	assertProgress := func(serviceName, operation string) {
-		session := cf.Cf("service", serviceName)
-		Eventually(session, cf_helpers.FiveMinuteTimeout).Should(gbytes.Say(operation + " in progress"))
-		Eventually(session).Should(gexec.Exit(0))
-	}
-
-	deleteService := func(serviceName string) {
-		Eventually(cf.Cf("delete-service", serviceName, "-f"), cf_helpers.FiveMinuteTimeout).Should(gexec.Exit(0))
-		assertProgress(serviceName, "delete")
-		cf_helpers.AwaitServiceDeletion(serviceName)
-	}
-
-	testCrud := func(testAppURL string) {
-		cf_helpers.PutToTestApp(testAppURL, "foo", "bar")
-		Expect(cf_helpers.GetFromTestApp(testAppURL, "foo")).To(Equal("bar"))
-	}
-
-	testFifo := func(testAppURL string) {
-		queue := "a-test-queue"
-		cf_helpers.PushToTestAppQueue(testAppURL, queue, "foo")
-		cf_helpers.PushToTestAppQueue(testAppURL, queue, "bar")
-		Expect(cf_helpers.PopFromTestAppQueue(testAppURL, queue)).To(Equal("foo"))
-		Expect(cf_helpers.PopFromTestAppQueue(testAppURL, queue)).To(Equal("bar"))
-	}
-
-	updatePlan := func(serviceName, updatedPlanName string) {
-		Eventually(cf.Cf("update-service", serviceName, "-p", updatedPlanName), cf_helpers.FiveMinuteTimeout).Should(gexec.Exit(0))
-		assertProgress(serviceName, "update")
-		cf_helpers.AwaitServiceUpdate(serviceName)
-	}
-
-	testServiceWithExampleApp := func(exampleAppType, testAppURL string) {
-		switch exampleAppType {
-		case "crud":
-			testCrud(testAppURL)
-		case "fifo":
-			testFifo(testAppURL)
-		default:
-			Fail(fmt.Sprintf("invalid example app type %s. valid types are: crud, fifo", exampleAppType))
-		}
-	}
-
-	lifecycle := func(t LifecycleTest) {
-		It(fmt.Sprintf("plan: '%s', with arbitrary params: '%s', will update to: '%s'", t.Plan, string(t.ArbitraryParams), t.UpdateToPlan), func() {
-			serviceName := newServiceName()
-			createService(t.Plan, serviceName, string(t.ArbitraryParams))
-			testAppURL := cf_helpers.PushAndBindApp(testAppName, serviceName, exampleAppPath)
-
-			testServiceWithExampleApp(exampleAppType, testAppURL)
+			testService(rabbitmqConfig.AppType, appURL)
 
 			if t.UpdateToPlan != "" {
 				updatePlan(serviceName, t.UpdateToPlan)
-				testServiceWithExampleApp(exampleAppType, testAppURL)
+				testService(rabbitmqConfig.AppType, appURL)
 			}
 
-			unbindService(serviceName)
-			deleteService(serviceName)
+			cf.UnbindService(appName, serviceName)
+			cf.DeleteService(serviceName)
 		})
 	}
 
-	for _, test := range tests {
-		lifecycle(test)
+	for _, plan := range rabbitmqConfig.TestPlans {
+		lifecycle(plan)
 	}
 })
 
-type GinkgoFirehosePrinter struct{}
+func deployAppAndBindService(appName, serviceName, appPath string) string {
+	return cf_helpers.PushAndBindApp(appName, serviceName, appPath)
+}
 
-func (c GinkgoFirehosePrinter) Print(title, dump string) {
-	fmt.Fprintf(GinkgoWriter, "firehose: %s\n---%s\n---\n", title, dump)
+func testService(exampleAppType, testAppURL string) {
+	switch exampleAppType {
+	case "crud":
+		testCrud(testAppURL)
+	case "fifo":
+		testFifo(testAppURL)
+	default:
+		Fail(fmt.Sprintf("invalid example app type %s. valid types are: crud, fifo", exampleAppType))
+	}
+}
+
+func testCrud(testAppURL string) {
+	cf_helpers.PutToTestApp(testAppURL, "foo", "bar")
+	Expect(cf_helpers.GetFromTestApp(testAppURL, "foo")).To(Equal("bar"))
+}
+
+func testFifo(testAppURL string) {
+	queue := "a-test-queue"
+	cf_helpers.PushToTestAppQueue(testAppURL, queue, "foo")
+	cf_helpers.PushToTestAppQueue(testAppURL, queue, "bar")
+	Expect(cf_helpers.PopFromTestAppQueue(testAppURL, queue)).To(Equal("foo"))
+	Expect(cf_helpers.PopFromTestAppQueue(testAppURL, queue)).To(Equal("bar"))
+}
+
+func updatePlan(serviceName, updatedPlanName string) {
+	cf.UpdateService(serviceName, updatedPlanName)
+	cf.AssertProgress(serviceName, "update")
+	cf_helpers.AwaitServiceUpdate(serviceName)
 }
