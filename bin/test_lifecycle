@@ -1,4 +1,4 @@
 #!/bin/bash
 
-CGO_ENABLED=0 ginkgo -randomizeSuites=true -randomizeAllSpecs=true -keepGoing=true -failOnPending lifecycle_tests
+ginkgo -randomizeSuites=true -randomizeAllSpecs=true -keepGoing=true -failOnPending lifecycle_tests
 
