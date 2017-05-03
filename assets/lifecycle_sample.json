@@ -1,0 +1,13 @@
+{
+  "api":  "https://api.example.com",
+  "admin_user":"admin",
+  "admin_password":"password",
+  "skip_ssl_validation":true,
+  "org_name":"my-org",
+  "space_name":"my-space",
+  "service_offering":"my-offering",
+  "app_type":"fifo",
+  "plans":[{
+    "name":"my-plan"
+  }]
+}
