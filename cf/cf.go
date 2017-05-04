@@ -74,7 +74,6 @@ func AssertProgress(serviceName, operation string) {
 
 func DeleteService(serviceName string) {
 	eventuallyWithTimeout(cf_helpers.FiveMinuteTimeout, "delete-service", serviceName, "-f")
-	AssertProgress(serviceName, "delete")
 
 	cf_helpers.AwaitServiceDeletion(serviceName)
 }
