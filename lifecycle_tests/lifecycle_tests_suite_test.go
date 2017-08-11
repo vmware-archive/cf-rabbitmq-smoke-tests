@@ -2,6 +2,7 @@ package lifecycle_tests
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/services"
@@ -55,16 +56,19 @@ func loadCFConfig(configPath string) services.Config {
 }
 
 func loadRabbitmqConfig(configPath string) RabbitMQTestConfig {
+	if configPath == "" {
+		panic(fmt.Errorf("Path to config file is empty -- Did you set CONFIG_PATH?"))
+	}
 	config, err := os.Open(configPath)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("Could not open config file at %s --  ERROR %s", configPath, err.Error()))
 	}
 
 	defer config.Close()
 	var rmqConfig RabbitMQTestConfig
 	err = json.NewDecoder(config).Decode(&rmqConfig)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("Could not decode config json -- ERROR: %s", err.Error()))
 	}
 
 	return rmqConfig
