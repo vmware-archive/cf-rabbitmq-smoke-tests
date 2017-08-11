@@ -3,6 +3,7 @@ package service_test
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"testing"
 
@@ -20,14 +21,17 @@ type testConfig struct {
 }
 
 func loadConfig(path string) (cfg testConfig) {
+	if path == "" {
+		fatal("Path to config file is empty", fmt.Errorf("CONFIG_PATH not set"))
+	}
 	configFile, err := os.Open(path)
 	if err != nil {
-		fatal(err)
+		fatal(fmt.Sprintf("Failed while opening config file at %s", path), err)
 	}
 
 	decoder := json.NewDecoder(configFile)
 	if err = decoder.Decode(&cfg); err != nil {
-		fatal(err)
+		fatal("Cannot decode config json", err)
 	}
 
 	return
@@ -38,14 +42,13 @@ var (
 	ctx    services.Context
 )
 
-func fatal(err error) {
-	fmt.Printf("ERROR: %s\n", err.Error())
-	os.Exit(1)
+func fatal(message string, err error) {
+	log.Fatalf("%s -- ERROR: %s", message, err.Error())
 }
 
 func TestService(t *testing.T) {
 	if err := services.ValidateConfig(&config.Config); err != nil {
-		fatal(err)
+		fatal("Invalid config", err)
 	}
 
 	ctx = services.NewContext(config.Config, "rabbitmq-smoke-tests")
