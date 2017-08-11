@@ -46,8 +46,18 @@ func fatal(message string, err error) {
 	log.Fatalf("%s -- ERROR: %s", message, err.Error())
 }
 
+func validateConfig(config *services.Config) error {
+	if err := services.ValidateConfig(config); err != nil {
+		return err
+	}
+	if config.AppsDomain == "" {
+		return fmt.Errorf("Field 'apps_domain' must not be empty")
+	}
+	return nil
+}
+
 func TestService(t *testing.T) {
-	if err := services.ValidateConfig(&config.Config); err != nil {
+	if err := validateConfig(&config.Config); err != nil {
 		fatal("Invalid config", err)
 	}
 
