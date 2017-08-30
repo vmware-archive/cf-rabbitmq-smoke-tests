@@ -14,4 +14,8 @@ public class QueuesService {
     public void publish(String queueName, String message) {
         rabbitTemplate.convertAndSend(queueName, message);
     }
+
+    public String consume(String queueName) {
+        return new String(rabbitTemplate.receive(queueName).getBody());
+    }
 }

@@ -9,11 +9,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class SpringExampleAppApplication {
+public class SpringExampleApp {
+
+	final static String QUEUE_NAME = "a-test-queue";
 
 	@Bean
 	Queue queue() {
-		return new Queue("test", false);
+		return new Queue(QUEUE_NAME, false);
 	}
 
 	@Bean
@@ -23,10 +25,10 @@ public class SpringExampleAppApplication {
 
 	@Bean
 	Binding binding(Queue queue, TopicExchange exchange) {
-		return BindingBuilder.bind(queue).to(exchange).with("test");
+		return BindingBuilder.bind(queue).to(exchange).with(QUEUE_NAME);
 	}
 
 	public static void main(String[] args) {
- 		SpringApplication.run(SpringExampleAppApplication.class, args);
+ 		SpringApplication.run(SpringExampleApp.class, args);
 	}
 }
