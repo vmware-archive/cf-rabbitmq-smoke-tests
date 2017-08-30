@@ -31,7 +31,7 @@ var _ = Describe("The service broker lifecycle", func() {
 		It(fmt.Sprintf("plan: '%s', with arbitrary params: '%s', will update to: '%s'", t.Name, string(t.ArbitraryParams), t.UpdateToPlan), func() {
 			cf.CreateService(rabbitmqConfig.ServiceOffering, t.Name, serviceName, string(t.ArbitraryParams))
 
-			appURL := deployAppAndBindService(appName, serviceName, appPath)
+			appURL := cf_helpers.PushAndBindApp(appName, serviceName, appPath)
 
 			testService(rabbitmqConfig.AppType, appURL)
 
@@ -41,6 +41,7 @@ var _ = Describe("The service broker lifecycle", func() {
 			}
 
 			cf.UnbindService(appName, serviceName)
+
 			cf.DeleteService(serviceName)
 		})
 	}
@@ -49,10 +50,6 @@ var _ = Describe("The service broker lifecycle", func() {
 		lifecycle(plan)
 	}
 })
-
-func deployAppAndBindService(appName, serviceName, appPath string) string {
-	return cf_helpers.PushAndBindApp(appName, serviceName, appPath)
-}
 
 func testService(exampleAppType, testAppURL string) {
 	switch exampleAppType {
