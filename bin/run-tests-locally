@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+[ -z "$DEBUG" ] || set -x
+
+set -e
+
+GOPATH=$(mktemp -d)
+export GOPATH
+
+export GOROOT=/usr/local/Cellar/go/1.9/libexec
+
+REPO_NAME=github.com/pivotal-cf/cf-rabbitmq-smoke-tests
+REPO_DIR=$HOME/workspace/cf-rabbitmq-smoke-tests
+
+cp -R $REPO_DIR/vendor $GOPATH
+mv $GOPATH/{vendor,src}
+mkdir -p $GOPATH/src/$REPO_NAME
+
+cp -R $REPO_DIR/ $GOPATH/src/$REPO_NAME
+
+pushd $GOPATH/src/$REPO_NAME
+  ./bin/test
+  ./bin/test_lifecycle
+popd
