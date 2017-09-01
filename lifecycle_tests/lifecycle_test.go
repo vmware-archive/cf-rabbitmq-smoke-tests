@@ -12,35 +12,41 @@ import (
 
 var _ = Describe("The service broker lifecycle", func() {
 	var (
-		appName     string
-		appPath     string
+		apps        map[string]string
 		serviceName string
 	)
 
 	BeforeEach(func() {
-		appName = fmt.Sprintf("rmq-smoke-test-app-%d", GinkgoParallelNode())
-		appPath = "../assets/rabbit-example-app"
+		apps = map[string]string{
+			"rmq-smoke-tests-ruby":   "../assets/rabbit-example-app",
+			"rmq-smoke-tests-spring": "../assets/spring-example-app",
+		}
 		serviceName = fmt.Sprintf("rmq-smoke-test-instance-%s", uuid.New()[:18])
 	})
 
 	AfterEach(func() {
-		cf.DeleteApp(appName)
+		for appName, _ := range apps {
+			cf.DeleteApp(appName)
+		}
 	})
 
-	lifecycle := func(t TestPlan) {
-		It(fmt.Sprintf("plan: '%s', with arbitrary params: '%s', will update to: '%s'", t.Name, string(t.ArbitraryParams), t.UpdateToPlan), func() {
-			cf.CreateService(rabbitmqConfig.ServiceOffering, t.Name, serviceName, string(t.ArbitraryParams))
+	lifecycle := func(testPlan TestPlan) {
+		It(fmt.Sprintf("plan: '%s', with arbitrary params: '%s', will update to: '%s'", testPlan.Name, string(testPlan.ArbitraryParams), testPlan.UpdateToPlan), func() {
+			cf.CreateService(rabbitmqConfig.ServiceOffering, testPlan.Name, serviceName, string(testPlan.ArbitraryParams))
 
-			appURL := deployAppAndBindService(appName, serviceName, appPath)
+			for appName, appPath := range apps {
+				appURL := cf_helpers.PushAndBindApp(appName, serviceName, appPath)
 
-			testService(rabbitmqConfig.AppType, appURL)
+				testService(rabbitmqConfig.AppType, appURL, appName)
 
-			if t.UpdateToPlan != "" {
-				updatePlan(serviceName, t.UpdateToPlan)
-				testService(rabbitmqConfig.AppType, appURL)
+				if testPlan.UpdateToPlan != "" {
+					updatePlan(serviceName, testPlan.UpdateToPlan)
+					testService(rabbitmqConfig.AppType, appURL, appName)
+				}
+
+				cf.UnbindService(appName, serviceName)
 			}
 
-			cf.UnbindService(appName, serviceName)
 			cf.DeleteService(serviceName)
 		})
 	}
@@ -50,16 +56,12 @@ var _ = Describe("The service broker lifecycle", func() {
 	}
 })
 
-func deployAppAndBindService(appName, serviceName, appPath string) string {
-	return cf_helpers.PushAndBindApp(appName, serviceName, appPath)
-}
-
-func testService(exampleAppType, testAppURL string) {
+func testService(exampleAppType, testAppURL, appName string) {
 	switch exampleAppType {
 	case "crud":
 		testCrud(testAppURL)
 	case "fifo":
-		testFifo(testAppURL)
+		testFifo(testAppURL, appName)
 	default:
 		Fail(fmt.Sprintf("invalid example app type %s. valid types are: crud, fifo", exampleAppType))
 	}
@@ -70,8 +72,8 @@ func testCrud(testAppURL string) {
 	Expect(cf_helpers.GetFromTestApp(testAppURL, "foo")).To(Equal("bar"))
 }
 
-func testFifo(testAppURL string) {
-	queue := "a-test-queue"
+func testFifo(testAppURL, appName string) {
+	queue := fmt.Sprintf("%s-queue", appName)
 	cf_helpers.PushToTestAppQueue(testAppURL, queue, "foo")
 	cf_helpers.PushToTestAppQueue(testAppURL, queue, "bar")
 	Expect(cf_helpers.PopFromTestAppQueue(testAppURL, queue)).To(Equal("foo"))

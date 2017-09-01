@@ -1,13 +1,13 @@
 {
-  "api":  "https://api.example.com",
+  "api":  "https://api.bosh-lite.com",
   "admin_user":"admin",
-  "admin_password":"password",
+  "admin_password":"admin",
   "skip_ssl_validation":true,
-  "org_name":"my-org",
-  "space_name":"my-space",
-  "service_offering":"my-offering",
+  "org_name":"system",
+  "space_name":"rabbitmq-smoke-tests-dev",
+  "service_offering":"rabbitmq-odb-bosh-lite",
   "app_type":"fifo",
   "plans":[{
-    "name":"my-plan"
+    "name":"solo"
   }]
 }

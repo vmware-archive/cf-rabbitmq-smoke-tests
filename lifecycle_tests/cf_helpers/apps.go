@@ -38,7 +38,7 @@ func findURL(cliOutput string) string {
 }
 
 func PushAndBindApp(appName, serviceName, testAppPath string) string {
-	Eventually(cf.Cf("push", "-p", testAppPath, "-f", filepath.Join(testAppPath, "manifest.yml"), "--no-start", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
+	Eventually(cf.Cf("push", "-f", filepath.Join(testAppPath, "manifest.yml"), "--no-start", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
 	Eventually(cf.Cf("bind-service", appName, serviceName), FiveMinuteTimeout).Should(gexec.Exit(0))
 
 	// The first time apps start, it is very slow as the buildpack downloads runtimes and caches them
@@ -78,6 +78,7 @@ func PushToTestAppQueue(testAppURL, queueName, message string) {
 		fmt.Sprintf("https://%s/queues/%s", testAppURL, queueName),
 		strings.NewReader(message),
 	)
+	postReq.Header.Add("Content-Type", "text/plain")
 	Expect(err).ToNot(HaveOccurred())
 	makeAndCheckHttpRequest(postReq)
 }
@@ -88,6 +89,7 @@ func PopFromTestAppQueue(testAppURL, queueName string) string {
 		fmt.Sprintf("https://%s/queues/%s", testAppURL, queueName),
 		nil,
 	)
+	getReq.Header.Add("Content-Type", "text/plain")
 	Expect(err).ToNot(HaveOccurred())
 	return makeAndCheckHttpRequest(getReq)
 }
