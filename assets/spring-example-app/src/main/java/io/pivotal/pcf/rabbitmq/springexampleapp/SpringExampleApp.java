@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class SpringExampleApp {
 
-	final static String QUEUE_NAME = "a-test-queue";
+	final static String QUEUE_NAME = "rmq-smoke-tests-spring-queue";
 
 	@Bean
 	Queue queue() {
@@ -20,7 +20,7 @@ public class SpringExampleApp {
 
 	@Bean
 	TopicExchange exchange() {
-		return new TopicExchange("spring-boot-exchange");
+		return new TopicExchange(QUEUE_NAME);
 	}
 
 	@Bean

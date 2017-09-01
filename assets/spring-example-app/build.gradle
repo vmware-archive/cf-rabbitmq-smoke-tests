@@ -12,6 +12,7 @@ buildscript {
 
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
+apply plugin: 'idea'
 
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
@@ -24,4 +25,11 @@ repositories {
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter-amqp')
 	runtime('org.springframework.boot:spring-boot-starter-web')
+}
+
+idea {
+	module {
+		downloadJavadoc = true
+		downloadSources = true
+	}
 }

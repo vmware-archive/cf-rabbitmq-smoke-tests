@@ -1,11 +1,11 @@
 {
-  "api":  "https://api.sys.ceili.gcp.london.cf-app.com",
-  "admin_user":"smoke_tests",
-  "admin_password":"YcvIMoB5igkCVMC_EQ1sEUv1iW08ju8M",
+  "api":  "https://api.bosh-lite.com",
+  "admin_user":"admin",
+  "admin_password":"admin",
   "skip_ssl_validation":true,
   "org_name":"system",
   "space_name":"rabbitmq-smoke-tests-dev",
-  "service_offering":"p.rabbitmq",
+  "service_offering":"rabbitmq-odb-bosh-lite",
   "app_type":"fifo",
   "plans":[{
     "name":"solo"
