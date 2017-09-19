@@ -2,4 +2,3 @@
 applications:
 - name: spring-example-app
   path: build/libs/spring-example-app-0.0.1-SNAPSHOT.jar
-  buildpack: java_buildpack
