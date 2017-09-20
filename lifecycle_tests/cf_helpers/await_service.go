@@ -17,6 +17,7 @@ const (
 	FiveSecondTimeout   time.Duration = time.Second * 5
 	ThirtySecondTimeout time.Duration = time.Second * 30
 	FiveMinuteTimeout   time.Duration = time.Minute * 5
+	TenMinuteTimeout    time.Duration = time.Minute * 10
 	ThirtyMinuteTimeout time.Duration = time.Minute * 30 // This is only so long to support a stressed director. It should be combined with smart fail-fast
 )
 
@@ -49,7 +50,7 @@ func awaitServicesOperation(serviceName string, successMessageMatcher types.Gome
 
 	Eventually(func() bool {
 		session := cfCommand()
-		Eventually(session, FiveMinuteTimeout).Should(gexec.Exit(0))
+		Eventually(session, TenMinuteTimeout).Should(gexec.Exit(0))
 
 		contents := session.Buffer().Contents()
 
