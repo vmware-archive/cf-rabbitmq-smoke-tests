@@ -19,3 +19,6 @@
 [submodule "vendor/github.com/craigfurman/herottp"]
 	path = vendor/github.com/craigfurman/herottp
 	url = https://github.com/craigfurman/herottp
+[submodule "assets/spring-example-app"]
+	path = assets/spring-example-app
+	url = git@github.com:pivotal-cf/rabbit-spring-example-app.git
