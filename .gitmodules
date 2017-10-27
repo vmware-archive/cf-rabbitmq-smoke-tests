@@ -21,4 +21,4 @@
 	url = https://github.com/craigfurman/herottp
 [submodule "assets/spring-example-app"]
 	path = assets/spring-example-app
-	url = git@github.com:pivotal-cf/rabbit-spring-example-app.git
+	url = https://github.com/pivotal-cf/rabbit-spring-example-app.git
