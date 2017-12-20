@@ -52,6 +52,12 @@ func CreateAndBindSecurityGroup(securityGroupName, orgName, spaceName string) *g
 	return eventually("bind-security-group", securityGroupName, orgName, spaceName)
 }
 
+func CreateAndSetQuota(quotaName, orgName string) *gexec.Session {
+	eventually("create-quota", quotaName, "-m", "10G", "-r", "1000", "-s", "100", "--allow-paid-service-plans")
+
+	return eventually("set-quota", orgName, quotaName)
+}
+
 func EnableServiceAccess(serviceOffering, testPlan, orgName string) *gexec.Session {
 	return eventually("enable-service-access", serviceOffering, "-p", testPlan, "-o", orgName)
 }
@@ -80,6 +86,10 @@ func DeleteSecurityGroup(securityGroupName string) *gexec.Session {
 	return eventuallyWithTimeout(cf_helpers.ThirtySecondTimeout, "delete-security-group", securityGroupName, "-f")
 }
 
+func DeleteQuota(quotaName string) *gexec.Session {
+	return eventuallyWithTimeout(cf_helpers.ThirtySecondTimeout, "delete-quota", quotaName, "-f")
+}
+
 func CreateService(serviceOffering, servicePlan, serviceName, arbitraryParams string) *gexec.Session {
 	args := []string{"create-service", serviceOffering, servicePlan, serviceName}
 	if arbitraryParams != "" {
@@ -105,7 +115,7 @@ func AssertProgress(serviceName, operation string) {
 }
 
 func DeleteService(serviceName string) {
-	eventuallyWithTimeout(cf_helpers.FiveMinuteTimeout, "delete-service", serviceName, "-f")
+	eventuallyWithTimeout(cf_helpers.TenMinuteTimeout, "delete-service", serviceName, "-f")
 
 	cf_helpers.AwaitServiceDeletion(serviceName)
 }

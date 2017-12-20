@@ -16,7 +16,8 @@ var (
 	configPath        = os.Getenv("CONFIG_PATH")
 	cfConfig          = loadCFConfig(configPath)
 	rabbitmqConfig    = loadRabbitmqConfig(configPath)
-	securityGroupName = "cf-rabbitmq-smoke-tests"
+	securityGroupName = "cf-rabbitmq-smoke-tests-security-group"
+	quotaName         = "cf-rabbitmq-smoke-tests-quota"
 )
 
 func TestLifecycle(t *testing.T) {
@@ -27,6 +28,7 @@ func TestLifecycle(t *testing.T) {
 		cf.CreateSpace(cfConfig.OrgName, rabbitmqConfig.SpaceName)
 		cf.Target(cfConfig.OrgName, rabbitmqConfig.SpaceName)
 		cf.CreateAndBindSecurityGroup(securityGroupName, cfConfig.OrgName, rabbitmqConfig.SpaceName)
+		cf.CreateAndSetQuota(quotaName, cfConfig.OrgName)
 
 		for _, testPlan := range rabbitmqConfig.TestPlans {
 			cf.EnableServiceAccess(rabbitmqConfig.ServiceOffering, testPlan.Name, cfConfig.OrgName)
@@ -38,9 +40,13 @@ func TestLifecycle(t *testing.T) {
 
 	SynchronizedAfterSuite(func() {
 	}, func() {
-		cf.DeleteSecurityGroup(securityGroupName)
+		cf.Target(cfConfig.OrgName, rabbitmqConfig.SpaceName)
+
 		cf.DeleteSpace(rabbitmqConfig.SpaceName)
 		cf.DeleteOrg(cfConfig.OrgName)
+
+		cf.DeleteQuota(quotaName)
+		cf.DeleteSecurityGroup(securityGroupName)
 	})
 
 	RegisterFailHandler(Fail)
