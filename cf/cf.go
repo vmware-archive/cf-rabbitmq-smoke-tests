@@ -1,6 +1,9 @@
 package cf
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
 	"time"
 
 	helpersCF "github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -28,6 +31,31 @@ func Target(orgName, spaceName string) *gexec.Session {
 	return eventually("target", "-o", orgName, "-s", spaceName)
 }
 
+func CreateAndBindSecurityGroup(securityGroupName, orgName, spaceName string) *gexec.Session {
+	sgs := []struct {
+		Protocol    string `json:"protocol"`
+		Destination string `json:"destination"`
+		Ports       string `json:"ports"`
+	}{
+		{"tcp", "0.0.0.0/0", "5671,5672,1883,8883,61613,61614,15672,15674"},
+	}
+
+	sgFile, err := ioutil.TempFile("", "smoke-test-security-group-")
+	Expect(err).NotTo(HaveOccurred())
+	defer sgFile.Close()
+	defer os.Remove(sgFile.Name())
+
+	err = json.NewEncoder(sgFile).Encode(sgs)
+	Expect(err).NotTo(HaveOccurred(), `{"FailReason": "Failed to encode security groups"}`)
+
+	eventually("create-security-group", securityGroupName, sgFile.Name())
+	return eventually("bind-security-group", securityGroupName, orgName, spaceName)
+}
+
+func EnableServiceAccess(serviceOffering, testPlan, orgName string) *gexec.Session {
+	return eventually("enable-service-access", serviceOffering, "-p", testPlan, "-o", orgName)
+}
+
 func CreateOrg(orgName string) *gexec.Session {
 	return eventually("create-org", orgName)
 }
@@ -46,6 +74,10 @@ func DeleteSpace(spaceName string) *gexec.Session {
 
 func DeleteApp(appName string) *gexec.Session {
 	return eventuallyWithTimeout(cf_helpers.ThirtySecondTimeout, "delete", appName, "-f", "-r")
+}
+
+func DeleteSecurityGroup(securityGroupName string) *gexec.Session {
+	return eventuallyWithTimeout(cf_helpers.ThirtySecondTimeout, "delete-security-group", securityGroupName, "-f")
 }
 
 func CreateService(serviceOffering, servicePlan, serviceName, arbitraryParams string) *gexec.Session {

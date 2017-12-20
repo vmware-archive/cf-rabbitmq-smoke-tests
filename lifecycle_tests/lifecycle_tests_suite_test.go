@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	configPath     = os.Getenv("CONFIG_PATH")
-	cfConfig       = loadCFConfig(configPath)
-	rabbitmqConfig = loadRabbitmqConfig(configPath)
+	configPath        = os.Getenv("CONFIG_PATH")
+	cfConfig          = loadCFConfig(configPath)
+	rabbitmqConfig    = loadRabbitmqConfig(configPath)
+	securityGroupName = "cf-rabbitmq-smoke-tests"
 )
 
 func TestLifecycle(t *testing.T) {
@@ -25,12 +26,19 @@ func TestLifecycle(t *testing.T) {
 		cf.CreateOrg(cfConfig.OrgName)
 		cf.CreateSpace(cfConfig.OrgName, rabbitmqConfig.SpaceName)
 		cf.Target(cfConfig.OrgName, rabbitmqConfig.SpaceName)
+		cf.CreateAndBindSecurityGroup(securityGroupName, cfConfig.OrgName, rabbitmqConfig.SpaceName)
+
+		for _, testPlan := range rabbitmqConfig.TestPlans {
+			cf.EnableServiceAccess(rabbitmqConfig.ServiceOffering, testPlan.Name, cfConfig.OrgName)
+		}
+
 		return []byte{}
 	}, func([]byte) {
 	})
 
 	SynchronizedAfterSuite(func() {
 	}, func() {
+		cf.DeleteSecurityGroup(securityGroupName)
 		cf.DeleteSpace(rabbitmqConfig.SpaceName)
 		cf.DeleteOrg(cfConfig.OrgName)
 	})
