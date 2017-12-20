@@ -121,7 +121,7 @@ func DeleteService(serviceName string) {
 }
 
 func eventually(args ...string) *gexec.Session {
-	return eventuallyWithTimeout(cf_helpers.FiveSecondTimeout, args...)
+	return eventuallyWithTimeout(cf_helpers.ThirtySecondTimeout, args...)
 }
 
 func eventuallyWithTimeout(timeout time.Duration, args ...string) *gexec.Session {
