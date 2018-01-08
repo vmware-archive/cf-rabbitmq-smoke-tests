@@ -62,6 +62,10 @@ func EnableServiceAccess(serviceOffering, testPlan, orgName string) *gexec.Sessi
 	return eventually("enable-service-access", serviceOffering, "-p", testPlan, "-o", orgName)
 }
 
+func DisableServiceAccess(serviceOffering, testPlan, orgName string) *gexec.Session {
+	return eventually("disable-service-access", serviceOffering, "-p", testPlan, "-o", orgName)
+}
+
 func CreateOrg(orgName string) *gexec.Session {
 	return eventually("create-org", orgName)
 }

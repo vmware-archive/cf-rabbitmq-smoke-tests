@@ -47,6 +47,10 @@ func TestLifecycle(t *testing.T) {
 
 		cf.DeleteQuota(quotaName)
 		cf.DeleteSecurityGroup(securityGroupName)
+
+		for _, testPlan := range rabbitmqConfig.TestPlans {
+			cf.DisableServiceAccess(rabbitmqConfig.ServiceOffering, testPlan.Name, cfConfig.OrgName)
+		}
 	})
 
 	RegisterFailHandler(Fail)
