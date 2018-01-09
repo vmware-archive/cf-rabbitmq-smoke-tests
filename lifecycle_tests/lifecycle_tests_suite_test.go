@@ -42,15 +42,15 @@ func TestLifecycle(t *testing.T) {
 	}, func() {
 		cf.Target(cfConfig.OrgName, rabbitmqConfig.SpaceName)
 
+		for _, testPlan := range rabbitmqConfig.TestPlans {
+			cf.DisableServiceAccess(rabbitmqConfig.ServiceOffering, testPlan.Name, cfConfig.OrgName)
+		}
+
 		cf.DeleteSpace(rabbitmqConfig.SpaceName)
 		cf.DeleteOrg(cfConfig.OrgName)
 
 		cf.DeleteQuota(quotaName)
 		cf.DeleteSecurityGroup(securityGroupName)
-
-		for _, testPlan := range rabbitmqConfig.TestPlans {
-			cf.DisableServiceAccess(rabbitmqConfig.ServiceOffering, testPlan.Name, cfConfig.OrgName)
-		}
 	})
 
 	RegisterFailHandler(Fail)
