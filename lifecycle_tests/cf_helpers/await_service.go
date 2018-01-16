@@ -38,7 +38,7 @@ func AwaitServiceCreation(serviceName string) {
 }
 
 func AwaitServiceDeletion(serviceName string) {
-	awaitServiceOperation(cfService(serviceName), ContainSubstring("not found"))
+	awaitServicesOperation(serviceName, Not(ContainSubstring(serviceName)))
 }
 
 func AwaitServiceUpdate(serviceName string) {
