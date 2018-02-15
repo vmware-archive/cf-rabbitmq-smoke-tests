@@ -32,7 +32,7 @@ var _ = Describe("RabbitMQ Service", func() {
 
 	BeforeEach(func() {
 		appName = randomName()
-		Eventually(cf.Cf("push", appName, "-d", config.AppsDomain, "-m", "256M", "-p", appPath, "-s", "cflinuxfs2", "-no-start"), config.ScaledTimeout(timeout)).Should(Exit(0))
+		Eventually(cf.Cf("push", appName, "-d", config.AppsDomain, "-m", "256M", "-p", appPath, "-s", "cflinuxfs2", "--no-start"), config.ScaledTimeout(timeout)).Should(Exit(0))
 	})
 
 	AfterEach(func() {
