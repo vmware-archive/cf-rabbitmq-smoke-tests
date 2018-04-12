@@ -35,7 +35,7 @@ func TestLifecycle(t *testing.T) {
 	})
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Lifecycle Suite")
+	RunSpecs(t, "Smoke Tests Suite")
 }
 
 func loadTestConfig(configPath string) TestConfig {
