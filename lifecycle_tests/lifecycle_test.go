@@ -2,6 +2,7 @@ package lifecycle_tests
 
 import (
 	"fmt"
+	"sync"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -34,18 +35,26 @@ var _ = Describe("The service broker lifecycle", func() {
 		It(fmt.Sprintf("plan: '%s', with arbitrary params: '%s', will update to: '%s'", testPlan.Name, string(testPlan.ArbitraryParams), testPlan.UpdateToPlan), func() {
 			cf.CreateService(config.ServiceOffering, testPlan.Name, serviceName, string(testPlan.ArbitraryParams))
 
+			var wg sync.WaitGroup
+			wg.Add(len(apps))
+
 			for appName, appPath := range apps {
-				appURL := cf_helpers.PushAndBindApp(appName, serviceName, appPath)
+				go func(appName, appPath string) {
+					appURL := cf_helpers.PushAndBindApp(appName, serviceName, appPath)
 
-				testService(config.AppType, appURL, appName)
-
-				if testPlan.UpdateToPlan != "" {
-					updatePlan(serviceName, testPlan.UpdateToPlan)
 					testService(config.AppType, appURL, appName)
-				}
 
-				cf.UnbindService(appName, serviceName)
+					if testPlan.UpdateToPlan != "" {
+						updatePlan(serviceName, testPlan.UpdateToPlan)
+						testService(config.AppType, appURL, appName)
+					}
+
+					cf.UnbindService(appName, serviceName)
+					wg.Done()
+				}(appName, appPath)
 			}
+
+			wg.Wait()
 
 			cf.DeleteService(serviceName)
 		})
