@@ -2,6 +2,7 @@ package smoke_tests
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/config"
@@ -38,16 +39,19 @@ func TestLifecycle(t *testing.T) {
 }
 
 func loadTestConfig(configPath string) TestConfig {
+	if configPath == "" {
+		panic(fmt.Errorf("Path to config file is empty -- Did you set CONFIG_PATH?"))
+	}
 	configFile, err := os.Open(configPath)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("Could not open config file at %s --  ERROR %s", configPath, err.Error()))
 	}
 
 	defer configFile.Close()
 	var testConfig TestConfig
 	err = json.NewDecoder(configFile).Decode(&testConfig)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("Could not decode config json -- ERROR: %s", err.Error()))
 	}
 
 	return testConfig
