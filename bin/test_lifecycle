@@ -1,4 +1,0 @@
-#!/bin/bash
-
-ginkgo --trace -randomizeSuites=true -randomizeAllSpecs=true -keepGoing=true -failOnPending lifecycle_tests
-

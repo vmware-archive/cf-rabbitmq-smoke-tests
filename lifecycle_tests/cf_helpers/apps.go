@@ -128,7 +128,7 @@ func appBinding(appName, serviceName string) (*binding, error) {
 }
 
 type credentials struct {
-	Password string `json: "password"`
+	Password string `json:"password"`
 }
 
 func AppBindingCreds(appName, serviceName string) (interface{}, error) {
