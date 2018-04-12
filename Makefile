@@ -5,6 +5,7 @@
 help:
 	@echo '    deps ...................................... installs dependencies'
 	@echo '    go-vet .................................... runs go vet in source code'
+	@echo '    test ...................................... runs test'
 
 ###### Dependencies ###########################################################
 
@@ -18,5 +19,5 @@ deps:
 go-vet:
 	go vet `go list ./... | grep -v vendor`
 
-lifecycle_tests:
-	ginkgo --trace -randomizeSuites=true -randomizeAllSpecs=true -keepGoing=true -failOnPending lifecycle_tests
+test:
+	ginkgo --trace -randomizeSuites=true -randomizeAllSpecs=true -keepGoing=true -failOnPending tests
