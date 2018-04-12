@@ -32,16 +32,16 @@ var _ = Describe("The service broker lifecycle", func() {
 
 	lifecycle := func(testPlan TestPlan) {
 		It(fmt.Sprintf("plan: '%s', with arbitrary params: '%s', will update to: '%s'", testPlan.Name, string(testPlan.ArbitraryParams), testPlan.UpdateToPlan), func() {
-			cf.CreateService(rabbitmqConfig.ServiceOffering, testPlan.Name, serviceName, string(testPlan.ArbitraryParams))
+			cf.CreateService(config.ServiceOffering, testPlan.Name, serviceName, string(testPlan.ArbitraryParams))
 
 			for appName, appPath := range apps {
 				appURL := cf_helpers.PushAndBindApp(appName, serviceName, appPath)
 
-				testService(rabbitmqConfig.AppType, appURL, appName)
+				testService(config.AppType, appURL, appName)
 
 				if testPlan.UpdateToPlan != "" {
 					updatePlan(serviceName, testPlan.UpdateToPlan)
-					testService(rabbitmqConfig.AppType, appURL, appName)
+					testService(config.AppType, appURL, appName)
 				}
 
 				cf.UnbindService(appName, serviceName)
@@ -51,7 +51,7 @@ var _ = Describe("The service broker lifecycle", func() {
 		})
 	}
 
-	for _, plan := range rabbitmqConfig.TestPlans {
+	for _, plan := range config.TestPlans {
 		lifecycle(plan)
 	}
 })
