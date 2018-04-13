@@ -21,7 +21,6 @@ var (
 
 func TestLifecycle(t *testing.T) {
 	SynchronizedBeforeSuite(func() []byte {
-
 		wfh = workflowhelpers.NewTestSuiteSetup(&testConfig.Config)
 		wfh.Setup()
 

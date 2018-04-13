@@ -7,8 +7,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pborman/uuid"
-	"github.com/pivotal-cf/cf-rabbitmq-smoke-tests/cf"
-	"github.com/pivotal-cf/cf-rabbitmq-smoke-tests/tests/cf_helpers"
+	"github.com/pivotal-cf/cf-rabbitmq-smoke-tests/tests/helper"
 )
 
 var _ = Describe("Smoke tests", func() {
@@ -27,35 +26,35 @@ var _ = Describe("Smoke tests", func() {
 
 	AfterEach(func() {
 		for appName, _ := range apps {
-			cf.DeleteApp(appName)
+			helper.DeleteApp(appName)
 		}
 	})
 
 	for _, plan := range testConfig.TestPlans {
 		It(fmt.Sprintf("pushes an app, sends, and reads a message from RabbitMQ: plan '%s'", plan.Name), func() {
-			cf.CreateService(testConfig.ServiceOffering, plan.Name, serviceName)
+			helper.CreateService(testConfig.ServiceOffering, plan.Name, serviceName)
 
 			var wg sync.WaitGroup
 			wg.Add(len(apps))
 
 			for appName, appPath := range apps {
 				go func(appName, appPath string) {
-					appURL := cf_helpers.PushAndBindApp(appName, serviceName, appPath)
+					appURL := helper.PushAndBindApp(appName, serviceName, appPath)
 
 					queue := fmt.Sprintf("%s-queue", appName)
-					cf_helpers.PushToTestAppQueue(appURL, queue, "foo")
-					cf_helpers.PushToTestAppQueue(appURL, queue, "bar")
-					Expect(cf_helpers.PopFromTestAppQueue(appURL, queue)).To(Equal("foo"))
-					Expect(cf_helpers.PopFromTestAppQueue(appURL, queue)).To(Equal("bar"))
+					helper.SendMessage(appURL, queue, "foo")
+					helper.SendMessage(appURL, queue, "bar")
+					Expect(helper.ReceiveMessage(appURL, queue)).To(Equal("foo"))
+					Expect(helper.ReceiveMessage(appURL, queue)).To(Equal("bar"))
 
-					cf.UnbindService(appName, serviceName)
+					helper.UnbindService(appName, serviceName)
 					wg.Done()
 				}(appName, appPath)
 			}
 
 			wg.Wait()
 
-			cf.DeleteService(serviceName)
+			helper.DeleteService(serviceName)
 		}, 300.0) // seconds
 	}
 })
