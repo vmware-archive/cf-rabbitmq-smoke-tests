@@ -16,7 +16,7 @@ import (
 )
 
 func PushAndBindApp(appName, serviceName, testAppPath string) string {
-	Eventually(cf.Cf("push", "-f", filepath.Join(testAppPath, "manifest.yml"), "--no-start", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
+	Eventually(cf.Cf("push", "-f", filepath.Join(testAppPath, "manifest.yml"), "--no-start", "--random-route", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
 	Eventually(cf.Cf("bind-service", appName, serviceName), FiveMinuteTimeout).Should(gexec.Exit(0))
 	Eventually(cf.Cf("start", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
 
