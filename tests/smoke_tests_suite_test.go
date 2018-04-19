@@ -9,14 +9,8 @@ import (
 	"github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/cf-rabbitmq-smoke-tests/tests/helper"
 
 	"testing"
-)
-
-const (
-	securityGroupName = "cf-rabbitmq-smoke-tests"
-	quotaName         = "cf-rabbitmq-smoke-tests-quota"
 )
 
 var (
@@ -30,18 +24,12 @@ func TestLifecycle(t *testing.T) {
 		wfh = workflowhelpers.NewTestSuiteSetup(&testConfig.Config)
 		wfh.Setup()
 
-		helper.CreateAndBindSecurityGroup(securityGroupName, wfh.GetOrganizationName())
-		helper.CreateAndSetQuota(quotaName, wfh.GetOrganizationName())
-
 		return []byte{}
 	}, func([]byte) {
 	})
 
 	SynchronizedAfterSuite(func() {
 	}, func() {
-		helper.DeleteQuota(quotaName)
-		helper.DeleteSecurityGroup(securityGroupName)
-
 		wfh.Teardown()
 	})
 

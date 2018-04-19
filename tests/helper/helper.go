@@ -1,11 +1,9 @@
 package helper
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -16,40 +14,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
-
-func CreateAndBindSecurityGroup(securityGroupName, orgName string) {
-	sgs := []struct {
-		Protocol    string `json:"protocol"`
-		Destination string `json:"destination"`
-		Ports       string `json:"ports"`
-	}{
-		{"tcp", "0.0.0.0/0", "5671,5672,1883,8883,61613,61614,15672,15674"},
-	}
-
-	sgFile, err := ioutil.TempFile("", "smoke-test-security-group-")
-	Expect(err).NotTo(HaveOccurred())
-	defer sgFile.Close()
-	defer os.Remove(sgFile.Name())
-
-	err = json.NewEncoder(sgFile).Encode(sgs)
-	Expect(err).NotTo(HaveOccurred(), `{"FailReason": "Failed to encode security groups"}`)
-
-	Eventually(cf.Cf("create-security-group", securityGroupName, sgFile.Name()), FiveSecondTimeout).Should(gexec.Exit(0))
-	Eventually(cf.Cf("bind-security-group", securityGroupName, orgName), FiveSecondTimeout).Should(gexec.Exit(0))
-}
-
-func CreateAndSetQuota(quotaName, orgName string) {
-	Eventually(cf.Cf("create-quota", quotaName, "-m", "10G", "-r", "1000", "-s", "100", "--allow-paid-service-plans")).Should(gexec.Exit(0))
-	Eventually(cf.Cf("set-quota", orgName, quotaName)).Should(gexec.Exit(0))
-}
-
-func DeleteSecurityGroup(securityGroupName string) {
-	Eventually(cf.Cf("delete-security-group", securityGroupName, "-f"), ThirtySecondTimeout).Should(gexec.Exit(0))
-}
-
-func DeleteQuota(quotaName string) {
-	Eventually(cf.Cf("delete-quota", quotaName, "-f"), ThirtySecondTimeout).Should(gexec.Exit(0))
-}
 
 func PushAndBindApp(appName, serviceName, testAppPath string) string {
 	Eventually(cf.Cf("push", "-f", filepath.Join(testAppPath, "manifest.yml"), "--no-start", "--random-route", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
