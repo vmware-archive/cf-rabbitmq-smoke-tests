@@ -9,7 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf-experimental/cf-rabbitmq-smoke-tests/tests/helper"
+	"github.com/pivotal-cf/cf-rabbitmq-smoke-tests/tests/helper"
 
 	"testing"
 )
