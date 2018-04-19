@@ -29,10 +29,6 @@ func TestLifecycle(t *testing.T) {
 		helper.Target(testConfig.ExistingOrganization, spaceName)
 		helper.CreateAndBindSecurityGroup(securityGroupName, testConfig.ExistingOrganization, spaceName)
 
-		for _, testPlan := range testConfig.TestPlans {
-			helper.EnableServiceAccess(testConfig.ServiceOffering, testPlan.Name, testConfig.ExistingOrganization)
-		}
-
 		return []byte{}
 	}, func([]byte) {
 	})
@@ -40,13 +36,7 @@ func TestLifecycle(t *testing.T) {
 	SynchronizedAfterSuite(func() {
 	}, func() {
 		helper.Target(testConfig.ExistingOrganization, spaceName)
-
-		for _, testPlan := range testConfig.TestPlans {
-			helper.DisableServiceAccess(testConfig.ServiceOffering, testPlan.Name, testConfig.ExistingOrganization)
-		}
-
 		helper.DeleteSpace(spaceName)
-
 		helper.DeleteSecurityGroup(securityGroupName)
 	})
 

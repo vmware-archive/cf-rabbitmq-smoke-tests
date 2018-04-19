@@ -39,14 +39,6 @@ func DeleteSpace(spaceName string) *gexec.Session {
 	return eventuallyWithTimeout(ThirtySecondTimeout, "delete-space", spaceName, "-f")
 }
 
-func EnableServiceAccess(serviceOffering, testPlan, orgName string) *gexec.Session {
-	return eventuallyWithTimeout(ThirtySecondTimeout, "enable-service-access", serviceOffering, "-p", testPlan, "-o", orgName)
-}
-
-func DisableServiceAccess(serviceOffering, testPlan, orgName string) *gexec.Session {
-	return eventuallyWithTimeout(ThirtySecondTimeout, "disable-service-access", serviceOffering, "-p", testPlan, "-o", orgName)
-}
-
 func PushAndBindApp(appName, serviceName, testAppPath string) string {
 	Eventually(cf.Cf("push", "-f", filepath.Join(testAppPath, "manifest.yml"), "--no-start", "--random-route", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
 	Eventually(cf.Cf("bind-service", appName, serviceName), FiveMinuteTimeout).Should(gexec.Exit(0))
