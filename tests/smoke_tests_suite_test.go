@@ -30,8 +30,9 @@ func TestLifecycle(t *testing.T) {
 		wfh = workflowhelpers.NewTestSuiteSetup(&testConfig.Config)
 		wfh.Setup()
 
-		helper.CreateAndBindSecurityGroup(securityGroupName, wfh.GetOrganizationName())
-		helper.CreateAndSetQuota(quotaName, wfh.GetOrganizationName())
+		workflowhelpers.AsUser(wfh.AdminUserContext(), helper.FiveSecondTimeout, func() {
+			helper.CreateAndBindSecurityGroup(securityGroupName, wfh.TestSpace.OrganizationName(), wfh.TestSpace.SpaceName())
+		})
 
 		return []byte{}
 	}, func([]byte) {
@@ -39,8 +40,9 @@ func TestLifecycle(t *testing.T) {
 
 	SynchronizedAfterSuite(func() {
 	}, func() {
-		helper.DeleteQuota(quotaName)
-		helper.DeleteSecurityGroup(securityGroupName)
+		workflowhelpers.AsUser(wfh.AdminUserContext(), helper.FiveSecondTimeout, func() {
+			helper.DeleteSecurityGroup(securityGroupName)
+		})
 
 		wfh.Teardown()
 	})

@@ -17,7 +17,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-func CreateAndBindSecurityGroup(securityGroupName, orgName string) {
+func CreateAndBindSecurityGroup(securityGroupName, orgName, spaceName string) {
 	sgs := []struct {
 		Protocol    string `json:"protocol"`
 		Destination string `json:"destination"`
@@ -35,20 +35,11 @@ func CreateAndBindSecurityGroup(securityGroupName, orgName string) {
 	Expect(err).NotTo(HaveOccurred(), `{"FailReason": "Failed to encode security groups"}`)
 
 	Eventually(cf.Cf("create-security-group", securityGroupName, sgFile.Name()), FiveSecondTimeout).Should(gexec.Exit(0))
-	Eventually(cf.Cf("bind-security-group", securityGroupName, orgName), FiveSecondTimeout).Should(gexec.Exit(0))
-}
-
-func CreateAndSetQuota(quotaName, orgName string) {
-	Eventually(cf.Cf("create-quota", quotaName, "-m", "10G", "-r", "1000", "-s", "100", "--allow-paid-service-plans")).Should(gexec.Exit(0))
-	Eventually(cf.Cf("set-quota", orgName, quotaName)).Should(gexec.Exit(0))
+	Eventually(cf.Cf("bind-security-group", securityGroupName, orgName, spaceName), FiveSecondTimeout).Should(gexec.Exit(0))
 }
 
 func DeleteSecurityGroup(securityGroupName string) {
 	Eventually(cf.Cf("delete-security-group", securityGroupName, "-f"), ThirtySecondTimeout).Should(gexec.Exit(0))
-}
-
-func DeleteQuota(quotaName string) {
-	Eventually(cf.Cf("delete-quota", quotaName, "-f"), ThirtySecondTimeout).Should(gexec.Exit(0))
 }
 
 func PushAndBindApp(appName, serviceName, testAppPath string) string {
