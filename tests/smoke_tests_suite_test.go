@@ -9,9 +9,12 @@ import (
 	"github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pivotal-cf-experimental/cf-rabbitmq-smoke-tests/tests/helper"
 
 	"testing"
 )
+
+const securityGroupName = "cf-rabbitmq-smoke-tests"
 
 var (
 	configPath = os.Getenv("CONFIG_PATH")
@@ -23,6 +26,8 @@ func TestLifecycle(t *testing.T) {
 	SynchronizedBeforeSuite(func() []byte {
 		wfh = workflowhelpers.NewTestSuiteSetup(&testConfig.Config)
 		wfh.Setup()
+
+		helper.CreateAndBindSecurityGroup(securityGroupName, wfh.GetOrganizationName())
 
 		return []byte{}
 	}, func([]byte) {
