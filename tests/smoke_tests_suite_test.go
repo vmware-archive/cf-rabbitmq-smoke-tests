@@ -39,10 +39,10 @@ func TestLifecycle(t *testing.T) {
 
 	SynchronizedAfterSuite(func() {
 	}, func() {
-		wfh.Teardown()
-
 		helper.DeleteQuota(quotaName)
 		helper.DeleteSecurityGroup(securityGroupName)
+
+		wfh.Teardown()
 	})
 
 	RegisterFailHandler(Fail)
