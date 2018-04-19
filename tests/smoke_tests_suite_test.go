@@ -14,7 +14,10 @@ import (
 	"testing"
 )
 
-const securityGroupName = "cf-rabbitmq-smoke-tests"
+const (
+	securityGroupName = "cf-rabbitmq-smoke-tests"
+	quotaName         = "cf-rabbitmq-smoke-tests-quota"
+)
 
 var (
 	configPath = os.Getenv("CONFIG_PATH")
@@ -28,6 +31,7 @@ func TestLifecycle(t *testing.T) {
 		wfh.Setup()
 
 		helper.CreateAndBindSecurityGroup(securityGroupName, wfh.GetOrganizationName())
+		helper.CreateAndSetQuota(quotaName, wfh.GetOrganizationName())
 
 		return []byte{}
 	}, func([]byte) {
@@ -36,6 +40,9 @@ func TestLifecycle(t *testing.T) {
 	SynchronizedAfterSuite(func() {
 	}, func() {
 		wfh.Teardown()
+
+		helper.DeleteQuota(quotaName)
+		helper.DeleteSecurityGroup(securityGroupName)
 	})
 
 	RegisterFailHandler(Fail)
