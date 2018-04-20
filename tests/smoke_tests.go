@@ -18,9 +18,13 @@ var _ = Describe("Smoke tests", func() {
 
 	BeforeEach(func() {
 		apps = map[string]string{
-			"rmq-smoke-tests-ruby":   "../assets/rabbit-example-app",
-			"rmq-smoke-tests-spring": "../assets/spring-example-app",
+			"rmq-smoke-tests-ruby": "../assets/rabbit-example-app",
 		}
+
+		if testConfig.ServiceOffering == "p.rabbitmq" {
+			apps["rmq-smoke-tests-spring"] = "../assets/spring-example-app"
+		}
+
 		serviceName = fmt.Sprintf("rmq-smoke-test-instance-%s", uuid.New()[:18])
 	})
 
