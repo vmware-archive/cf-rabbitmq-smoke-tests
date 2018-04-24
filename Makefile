@@ -18,4 +18,4 @@ go-vet:
 	go vet `go list ./... | grep -v vendor`
 
 test:
-	./scripts/test
+	ginkgo -v --trace -randomizeSuites=true -randomizeAllSpecs=true -keepGoing=true -failOnPending tests

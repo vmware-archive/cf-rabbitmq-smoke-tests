@@ -1,12 +1,14 @@
 package helper
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 
-	"github.com/craigfurman/herottp"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -34,12 +36,20 @@ func ReceiveMessage(testAppURL, queueName string) string {
 }
 
 func makeAndCheckHttpRequest(req *http.Request) string {
-	certIgnoringHTTPClient := herottp.New(herottp.Config{
-		DisableTLSCertificateVerification: true,
+	client := &http.Client{
 		Timeout: ThirtySecondTimeout,
-	})
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
 
-	resp, err := certIgnoringHTTPClient.Do(req)
+	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	Expect(err).ToNot(HaveOccurred())
 

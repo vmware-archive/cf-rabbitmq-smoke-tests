@@ -17,12 +17,6 @@
   revision = "1a8c223f1cc4110cc866f7298ff622b83e274173"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/craigfurman/herottp"
-  packages = ["."]
-  revision = "e0beddee8a2f4660428a9fcea371300daffa12e6"
-
-[[projects]]
   name = "github.com/onsi/ginkgo"
   packages = [
     ".",
