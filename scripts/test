@@ -1,2 +1,0 @@
-go install -v github.com/onsi/ginkgo/ginkgo
-ginkgo -v --trace -randomizeSuites=true -randomizeAllSpecs=true -keepGoing=true -failOnPending tests
