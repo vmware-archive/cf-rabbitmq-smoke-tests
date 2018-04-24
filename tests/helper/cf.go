@@ -9,34 +9,34 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
 
-func Api(endpoint string, skipSSLValidation bool) *gexec.Session {
-	apiCmd := []string{"api", endpoint}
-
-	if skipSSLValidation {
-		apiCmd = append(apiCmd, "--skip-ssl-validation")
+func CreateAndBindSecurityGroup(securityGroupName, orgName, spaceName string) {
+	sgs := []struct {
+		Protocol    string `json:"protocol"`
+		Destination string `json:"destination"`
+		Ports       string `json:"ports"`
+	}{
+		{"tcp", "0.0.0.0/0", "5671,5672,1883,8883,61613,61614,15672,15674"},
 	}
 
-	return eventuallyWithTimeout(ThirtySecondTimeout, apiCmd...)
+	sgFile, err := ioutil.TempFile("", "smoke-test-security-group-")
+	Expect(err).NotTo(HaveOccurred())
+	defer sgFile.Close()
+	defer os.Remove(sgFile.Name())
+
+	err = json.NewEncoder(sgFile).Encode(sgs)
+	Expect(err).NotTo(HaveOccurred(), `{"FailReason": "Failed to encode security groups"}`)
+
+	Eventually(cf.Cf("create-security-group", securityGroupName, sgFile.Name()), FiveSecondTimeout).Should(gexec.Exit(0))
+	Eventually(cf.Cf("bind-security-group", securityGroupName, orgName, spaceName), FiveSecondTimeout).Should(gexec.Exit(0))
 }
 
-func Auth(username, password string) *gexec.Session {
-	return eventuallyWithTimeout(ThirtySecondTimeout, "auth", username, password)
-}
-
-func Target(orgName, spaceName string) *gexec.Session {
-	return eventuallyWithTimeout(ThirtySecondTimeout, "target", "-o", orgName, "-s", spaceName)
-}
-
-func CreateSpace(orgName, spaceName string) *gexec.Session {
-	return eventuallyWithTimeout(ThirtySecondTimeout, "create-space", spaceName, "-o", orgName)
-}
-
-func DeleteSpace(spaceName string) *gexec.Session {
-	return eventuallyWithTimeout(ThirtySecondTimeout, "delete-space", spaceName, "-f")
+func DeleteSecurityGroup(securityGroupName string) {
+	Eventually(cf.Cf("delete-security-group", securityGroupName, "-f"), ThirtySecondTimeout).Should(gexec.Exit(0))
 }
 
 func PushAndBindApp(appName, serviceName, testAppPath string) string {
@@ -72,31 +72,6 @@ func DeleteService(serviceName string) *gexec.Session {
 	session := eventuallyWithTimeout(TenMinuteTimeout, "delete-service", serviceName, "-f")
 	AwaitServiceDeletion(serviceName)
 	return session
-}
-
-func CreateAndBindSecurityGroup(securityGroupName, orgName, spaceName string) *gexec.Session {
-	sgs := []struct {
-		Protocol    string `json:"protocol"`
-		Destination string `json:"destination"`
-		Ports       string `json:"ports"`
-	}{
-		{"tcp", "0.0.0.0/0", "5671,5672,1883,8883,61613,61614,15672,15674"},
-	}
-
-	sgFile, err := ioutil.TempFile("", "smoke-test-security-group-")
-	Expect(err).NotTo(HaveOccurred())
-	defer sgFile.Close()
-	defer os.Remove(sgFile.Name())
-
-	err = json.NewEncoder(sgFile).Encode(sgs)
-	Expect(err).NotTo(HaveOccurred(), `{"FailReason": "Failed to encode security groups"}`)
-
-	eventuallyWithTimeout(ThirtySecondTimeout, "create-security-group", securityGroupName, sgFile.Name())
-	return eventuallyWithTimeout(ThirtySecondTimeout, "bind-security-group", securityGroupName, orgName, spaceName)
-}
-
-func DeleteSecurityGroup(securityGroupName string) *gexec.Session {
-	return eventuallyWithTimeout(ThirtySecondTimeout, "delete-security-group", securityGroupName, "-f")
 }
 
 func eventuallyWithTimeout(timeout time.Duration, args ...string) *gexec.Session {

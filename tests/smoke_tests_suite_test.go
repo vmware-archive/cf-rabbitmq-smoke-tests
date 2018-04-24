@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cloudfoundry-incubator/cf-test-helpers/generator"
+	"github.com/cloudfoundry-incubator/cf-test-helpers/config"
+	"github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/cf-rabbitmq-smoke-tests/tests/helper"
@@ -13,21 +14,25 @@ import (
 	"testing"
 )
 
+const (
+	securityGroupName = "cf-rabbitmq-smoke-tests"
+	quotaName         = "cf-rabbitmq-smoke-tests-quota"
+)
+
 var (
-	configPath        = os.Getenv("CONFIG_PATH")
-	testConfig        = loadTestConfig(configPath)
-	spaceName         = generator.PrefixedRandomName(testConfig.NamePrefix, "space")
-	securityGroupName = generator.PrefixedRandomName(testConfig.NamePrefix, "security-group")
+	configPath = os.Getenv("CONFIG_PATH")
+	testConfig = loadTestConfig(configPath)
+	wfh        *workflowhelpers.ReproducibleTestSuiteSetup
 )
 
 func TestLifecycle(t *testing.T) {
 	SynchronizedBeforeSuite(func() []byte {
+		wfh = workflowhelpers.NewTestSuiteSetup(&testConfig.Config)
+		wfh.Setup()
 
-		helper.Api(testConfig.ApiEndpoint, testConfig.SkipSSLValidation)
-		helper.Auth(testConfig.AdminUser, testConfig.AdminPassword)
-		helper.CreateSpace(testConfig.ExistingOrganization, spaceName)
-		helper.Target(testConfig.ExistingOrganization, spaceName)
-		helper.CreateAndBindSecurityGroup(securityGroupName, testConfig.ExistingOrganization, spaceName)
+		workflowhelpers.AsUser(wfh.AdminUserContext(), helper.FiveSecondTimeout, func() {
+			helper.CreateAndBindSecurityGroup(securityGroupName, wfh.TestSpace.OrganizationName(), wfh.TestSpace.SpaceName())
+		})
 
 		return []byte{}
 	}, func([]byte) {
@@ -35,9 +40,11 @@ func TestLifecycle(t *testing.T) {
 
 	SynchronizedAfterSuite(func() {
 	}, func() {
-		helper.Target(testConfig.ExistingOrganization, spaceName)
-		helper.DeleteSpace(spaceName)
-		helper.DeleteSecurityGroup(securityGroupName)
+		workflowhelpers.AsUser(wfh.AdminUserContext(), helper.FiveSecondTimeout, func() {
+			helper.DeleteSecurityGroup(securityGroupName)
+		})
+
+		wfh.Teardown()
 	})
 
 	RegisterFailHandler(Fail)
@@ -64,15 +71,11 @@ func loadTestConfig(configPath string) TestConfig {
 }
 
 type TestConfig struct {
-	ApiEndpoint          string     `json:"api"`
-	SkipSSLValidation    bool       `json:"skip_ssl_validation"`
-	AdminUser            string     `json:"admin_user"`
-	AdminPassword        string     `json:"admin_password"`
-	ExistingOrganization string     `json:"existing_organization"`
-	TestPlans            []TestPlan `json:"plans"`
-	ServiceOffering      string     `json:"service_offering"`
-	AppType              string     `json:"app_type"`
-	NamePrefix           string     `json:"name_prefix"`
+	config.Config
+
+	TestPlans       []TestPlan `json:"plans"`
+	ServiceOffering string     `json:"service_offering"`
+	AppType         string     `json:"app_type"`
 }
 
 type TestPlan struct {
