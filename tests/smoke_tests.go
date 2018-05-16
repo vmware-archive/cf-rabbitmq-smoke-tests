@@ -43,6 +43,8 @@ var _ = Describe("Smoke tests", func() {
 
 			for appName, appPath := range apps {
 				go func(appName, appPath string) {
+					defer GinkgoRecover()
+
 					appURL := helper.PushAndBindApp(appName, serviceName, appPath)
 
 					queue := fmt.Sprintf("%s-queue", appName)
