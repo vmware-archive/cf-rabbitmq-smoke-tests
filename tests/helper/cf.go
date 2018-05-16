@@ -30,8 +30,8 @@ func CreateAndBindSecurityGroup(securityGroupName, orgName, spaceName string) {
 	err = json.NewEncoder(sgFile).Encode(sgs)
 	Expect(err).NotTo(HaveOccurred(), `{"FailReason": "Failed to encode security groups"}`)
 
-	Eventually(cf.Cf("create-security-group", securityGroupName, sgFile.Name()), FiveSecondTimeout).Should(gexec.Exit(0))
-	Eventually(cf.Cf("bind-security-group", securityGroupName, orgName, spaceName), FiveSecondTimeout).Should(gexec.Exit(0))
+	Eventually(cf.Cf("create-security-group", securityGroupName, sgFile.Name()), ThirtySecondTimeout).Should(gexec.Exit(0))
+	Eventually(cf.Cf("bind-security-group", securityGroupName, orgName, spaceName), ThirtySecondTimeout).Should(gexec.Exit(0))
 }
 
 func DeleteSecurityGroup(securityGroupName string) {
@@ -44,7 +44,7 @@ func PushAndBindApp(appName, serviceName, testAppPath string) string {
 	Eventually(cf.Cf("start", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
 
 	appDetails := cf.Cf("app", appName)
-	Eventually(appDetails, FiveSecondTimeout).Should(gexec.Exit(0))
+	Eventually(appDetails, ThirtySecondTimeout).Should(gexec.Exit(0))
 
 	appDetailsOutput := string(appDetails.Buffer().Contents())
 	testAppURL := findURL(appDetailsOutput)
