@@ -38,6 +38,12 @@ func DeleteSecurityGroup(securityGroupName string) {
 	Eventually(cf.Cf("delete-security-group", securityGroupName, "-f"), ThirtySecondTimeout).Should(gexec.Exit(0))
 }
 
+func GetAppEnv(appName string) string {
+	appEnv := cf.Cf("env", appName)
+	Eventually(appEnv, ThirtySecondTimeout).Should(gexec.Exit(0))
+	return string(appEnv.Buffer().Contents())
+}
+
 func PushAndBindApp(appName, serviceName, testAppPath string) string {
 	Eventually(cf.Cf("push", "-f", filepath.Join(testAppPath, "manifest.yml"), "--no-start", "--random-route", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
 	Eventually(cf.Cf("bind-service", appName, serviceName), FiveMinuteTimeout).Should(gexec.Exit(0))
