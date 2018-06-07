@@ -10,7 +10,7 @@ In order to run the tests:
   - `api` to point to Cloud Foundry
   - The `admin_user` and `admin_password`
   - The `service_offering` and `plans` names
-- Run `make test`
+- Run `make test` with `CONFIG_PATH` set to your config file
 
 ## Notes
 - Run `make` to list all options

@@ -2,7 +2,6 @@ package smoke_tests
 
 import (
 	"fmt"
-	"sync"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

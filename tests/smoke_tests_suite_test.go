@@ -75,7 +75,6 @@ type TestConfig struct {
 
 	TestPlans       []TestPlan `json:"plans"`
 	ServiceOffering string     `json:"service_offering"`
-	AppType         string     `json:"app_type"`
 	TLSSupport      string     `json:"tls_support"`
 }
 
