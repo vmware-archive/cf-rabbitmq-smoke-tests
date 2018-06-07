@@ -31,14 +31,22 @@ var _ = Describe("Smoke tests", func() {
 
 			helper.CreateService(testConfig.ServiceOffering, plan.Name, serviceName)
 
-			// if it's TLS, then update the service to make TLS happen on the rabbit
+			if useTLS {
+				By("enabling TLS")
+				helper.EnableTLSForODB(serviceName)
+			}
+
 			By("pushing and binding an app")
 			appURL := helper.PushAndBindApp(appName, serviceName, appPath)
-			if testConfig.TLSSupport != "disabled" {
-				By("connecting to rabbit securely")
-				appEnv := helper.GetAppEnv(appName)
-				Expect(appEnv).To(ContainSubstring("amqps://"))
-				Expect(appEnv).ToNot(ContainSubstring("amqp://"), "should not bind to app through amqp")
+
+			By("RabbitMQ protocol")
+			appEnv := helper.GetAppEnv(appName)
+			if useTLS {
+				Expect(appEnv).To(ContainSubstring("amqps://"), "bind should expose amqps protocol")
+				Expect(appEnv).ToNot(ContainSubstring("amqp://"), "bind should not expose amqp protocol")
+			} else {
+				Expect(appEnv).ToNot(ContainSubstring("amqps://"), "bind should not expose amqps protocol")
+				Expect(appEnv).To(ContainSubstring("amqp://"), "bind should expose amqp protocol")
 			}
 
 			By("sending and receiving rabbit messages")

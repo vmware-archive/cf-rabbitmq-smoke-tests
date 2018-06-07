@@ -69,6 +69,11 @@ func CreateService(serviceOffering, servicePlan, serviceName string) *gexec.Sess
 	return session
 }
 
+func UpdateService(serviceName, params string) {
+	eventuallyWithTimeout(FiveMinuteTimeout, "update-service", serviceName, "-c", params)
+	AwaitServiceUpdate(serviceName)
+}
+
 func UnbindService(appName, serviceName string) *gexec.Session {
 	return eventuallyWithTimeout(FiveMinuteTimeout, "unbind-service", appName, serviceName)
 }
@@ -77,6 +82,20 @@ func DeleteService(serviceName string) *gexec.Session {
 	session := eventuallyWithTimeout(TenMinuteTimeout, "delete-service", serviceName, "-f")
 	AwaitServiceDeletion(serviceName)
 	return session
+}
+
+func CreateServiceKey(serviceName, keyName string) {
+	eventuallyWithTimeout(FiveMinuteTimeout, "create-service-key", serviceName, keyName)
+}
+
+func DeleteServiceKey(serviceName, keyName string) {
+	eventuallyWithTimeout(FiveMinuteTimeout, "delete-service-key", "-f", serviceName, keyName)
+}
+
+func GetServiceKey(serviceName, keyName string) []byte {
+	getKey := cf.Cf("service-key", serviceName, keyName)
+	Eventually(getKey, FiveMinuteTimeout).Should(gexec.Exit(0))
+	return getKey.Buffer().Contents()
 }
 
 func eventuallyWithTimeout(timeout time.Duration, args ...string) *gexec.Session {

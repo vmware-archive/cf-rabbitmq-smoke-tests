@@ -44,6 +44,30 @@ func AwaitServiceCreation(serviceName string) {
 	}, ThirtyMinuteTimeout).Should(BeTrue())
 }
 
+// Keeps polling `cf service <service-name>` until service is updated.  For
+// on-demand offerings the operation of updating a new service instance is
+// async, which means that cf-cli immediately return `exit 0` while the
+// operation is been handled in the background by On-Demand broker.
+// This should be fast for multitenant offering, given that it's a sync operation.
+func AwaitServiceUpdate(serviceName string) {
+	Eventually(func() bool {
+		session := cf.Cf("service", serviceName)
+		Eventually(session, FiveMinuteTimeout).Should(gexec.Exit(0))
+
+		contents := session.Buffer().Contents()
+		if bytes.Contains(contents, []byte("update succeeded")) {
+			return true
+		}
+
+		if bytes.Contains(contents, []byte("failed")) {
+			Fail("cf operation failed:\n" + string(contents))
+		}
+
+		time.Sleep(FiveSecondTimeout)
+		return false
+	}, ThirtyMinuteTimeout).Should(BeTrue())
+}
+
 // Keeps polling `cf services` until service is no longer found in the services
 // list.  For On-Demand offerings this operation is async and might take longer.
 func AwaitServiceDeletion(serviceName string) {
