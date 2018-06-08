@@ -3,6 +3,7 @@ package helper
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -20,42 +21,20 @@ const (
 	ThirtyMinuteTimeout time.Duration = time.Minute * 30
 )
 
-// Keeps polling `cf service <service-name>` until service is created.  For
-// on-demand offerings the operation of creating a new service instance is
+var succeededMatcher = regexp.MustCompile(`(?im)^\s*status\s*:\s+(create|update)\s+succeeded\s*$`)
+
+// Keeps polling `cf service <service-name>` until service is created or updated.  For
+// on-demand offerings the operation of creating or updating a service instance is
 // async, which means that cf-cli immediately return `exit 0` while the
 // operation is been handled in the background by On-Demand broker.
 // This should be fast for multitenant offering, given that it's a sync operation.
-func AwaitServiceCreation(serviceName string) {
+func AwaitServiceAvailable(serviceName string) {
 	Eventually(func() bool {
 		session := cf.Cf("service", serviceName)
 		Eventually(session, FiveMinuteTimeout).Should(gexec.Exit(0))
 
 		contents := session.Buffer().Contents()
-		if bytes.Contains(contents, []byte("create succeeded")) {
-			return true
-		}
-
-		if bytes.Contains(contents, []byte("failed")) {
-			Fail("cf operation failed:\n" + string(contents))
-		}
-
-		time.Sleep(FiveSecondTimeout)
-		return false
-	}, ThirtyMinuteTimeout).Should(BeTrue())
-}
-
-// Keeps polling `cf service <service-name>` until service is updated.  For
-// on-demand offerings the operation of updating a new service instance is
-// async, which means that cf-cli immediately return `exit 0` while the
-// operation is been handled in the background by On-Demand broker.
-// This should be fast for multitenant offering, given that it's a sync operation.
-func AwaitServiceUpdate(serviceName string) {
-	Eventually(func() bool {
-		session := cf.Cf("service", serviceName)
-		Eventually(session, FiveMinuteTimeout).Should(gexec.Exit(0))
-
-		contents := session.Buffer().Contents()
-		if bytes.Contains(contents, []byte("update succeeded")) {
+		if succeededMatcher.Match(contents) {
 			return true
 		}
 

@@ -65,13 +65,13 @@ func DeleteApp(appName string) *gexec.Session {
 
 func CreateService(serviceOffering, servicePlan, serviceName string) *gexec.Session {
 	session := eventuallyWithTimeout(FiveMinuteTimeout, "create-service", serviceOffering, servicePlan, serviceName)
-	AwaitServiceCreation(serviceName)
+	AwaitServiceAvailable(serviceName)
 	return session
 }
 
 func UpdateService(serviceName, params string) {
 	eventuallyWithTimeout(FiveMinuteTimeout, "update-service", serviceName, "-c", params)
-	AwaitServiceUpdate(serviceName)
+	AwaitServiceAvailable(serviceName)
 }
 
 func UnbindService(appName, serviceName string) *gexec.Session {
