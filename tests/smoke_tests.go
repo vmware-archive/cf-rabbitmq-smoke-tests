@@ -10,26 +10,18 @@ import (
 )
 
 var _ = Describe("Smoke tests", func() {
-	var (
-		serviceName string
-		appName     string
-		appPath     string
-	)
 
-	BeforeEach(func() {
-		serviceName = fmt.Sprintf("rmq-smoke-test-instance-%s", uuid.New()[:18])
-		appName = "rmq-smoke-tests-ruby"
-		appPath = "../assets/rabbit-example-app"
-	})
+	const appName = "rmq-smoke-tests-ruby"
+	const appPath = "../assets/rabbit-example-app"
 
 	AfterEach(func() {
 		helper.DeleteApp(appName)
 	})
 
-	for _, plan := range testConfig.TestPlans {
-		It(fmt.Sprintf("pushes an app, sends, and reads a message from RabbitMQ: plan '%s'", plan.Name), func() {
-
-			helper.CreateService(testConfig.ServiceOffering, plan.Name, serviceName)
+	smokeTestForPlan := func(planName string) func() {
+		return func() {
+			serviceName := fmt.Sprintf("rmq-smoke-test-instance-%s", uuid.New()[:18])
+			helper.CreateService(testConfig.ServiceOffering, planName, serviceName)
 
 			if useTLS {
 				By("enabling TLS")
@@ -60,6 +52,11 @@ var _ = Describe("Smoke tests", func() {
 			helper.UnbindService(appName, serviceName)
 
 			helper.DeleteService(serviceName)
-		}, 300.0) // seconds
+		}
+	}
+
+	for _, plan := range testConfig.TestPlans {
+		It(fmt.Sprintf("pushes an app, sends, and reads a message from RabbitMQ: plan '%s'", plan.Name),
+			smokeTestForPlan(plan.Name), 300.0) // seconds
 	}
 })
