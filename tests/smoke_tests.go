@@ -23,7 +23,7 @@ var _ = Describe("Smoke tests", func() {
 			serviceName := fmt.Sprintf("rmq-smoke-test-instance-%s", uuid.New()[:18])
 			helper.CreateService(testConfig.ServiceOffering, planName, serviceName)
 
-			if useTLS {
+			if useTLS && testConfig.ServiceOffering == "p.rabbitmq" {
 				By("enabling TLS")
 				helper.EnableTLSForODB(serviceName)
 			}
