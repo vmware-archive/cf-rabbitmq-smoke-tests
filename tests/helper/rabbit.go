@@ -50,8 +50,8 @@ func makeAndCheckHttpRequest(req *http.Request) string {
 	}
 
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
 	Expect(err).ToNot(HaveOccurred())
+	defer resp.Body.Close()
 
 	bodyContent, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ToNot(HaveOccurred())

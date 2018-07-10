@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -30,7 +29,7 @@ var succeededMatcher = regexp.MustCompile(`(?im)^\s*status\s*:\s+(create|update)
 // This should be fast for multitenant offering, given that it's a sync operation.
 func AwaitServiceAvailable(serviceName string) {
 	Eventually(func() bool {
-		session := cf.Cf("service", serviceName)
+		session := Cf("service", serviceName)
 		Eventually(session, FiveMinuteTimeout).Should(gexec.Exit(0))
 
 		contents := session.Buffer().Contents()
@@ -51,7 +50,7 @@ func AwaitServiceAvailable(serviceName string) {
 // list.  For On-Demand offerings this operation is async and might take longer.
 func AwaitServiceDeletion(serviceName string) {
 	Eventually(func() bool {
-		session := cf.Cf("services")
+		session := Cf("services")
 		Eventually(session, TenMinuteTimeout).Should(gexec.Exit(0))
 
 		contents := session.Buffer().Contents()
