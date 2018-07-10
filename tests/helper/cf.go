@@ -2,6 +2,7 @@ package helper
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -34,6 +35,7 @@ func Cf(args ...string) *gexec.Session {
 		if s.ExitCode() == 0 {
 			return s
 		}
+		fmt.Printf("Retrying: %d out of %d", i, RETRY_LIMIT)
 		time.Sleep(5 * time.Second)
 	}
 	return s
