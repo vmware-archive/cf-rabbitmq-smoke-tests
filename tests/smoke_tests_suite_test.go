@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
@@ -31,7 +32,7 @@ func TestLifecycle(t *testing.T) {
 		wfh = workflowhelpers.NewTestSuiteSetup(&testConfig.Config)
 		wfh.Setup()
 
-		workflowhelpers.AsUser(wfh.AdminUserContext(), helper.ThirtySecondTimeout, func() {
+		workflowhelpers.AsUser(wfh.AdminUserContext(), 30*time.Second, func() {
 			helper.CreateAndBindSecurityGroup(securityGroupName, wfh.TestSpace.OrganizationName(), wfh.TestSpace.SpaceName())
 		})
 
@@ -41,7 +42,7 @@ func TestLifecycle(t *testing.T) {
 
 	SynchronizedAfterSuite(func() {
 	}, func() {
-		workflowhelpers.AsUser(wfh.AdminUserContext(), helper.ThirtySecondTimeout, func() {
+		workflowhelpers.AsUser(wfh.AdminUserContext(), 30*time.Second, func() {
 			helper.DeleteSecurityGroup(securityGroupName)
 		})
 

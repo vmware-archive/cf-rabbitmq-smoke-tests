@@ -15,7 +15,7 @@ import (
 )
 
 const RETRY_LIMIT = 5
-const COMMAND_TIMEOUT = 5 * time.Minute
+const COMMAND_TIMEOUT = 2 * time.Minute
 
 func CfWithTimeout(timeout time.Duration, args ...string) *gexec.Session {
 	session := cf.Cf(args...)
@@ -58,27 +58,21 @@ func CreateAndBindSecurityGroup(securityGroupName, orgName, spaceName string) {
 	err = json.NewEncoder(sgFile).Encode(sgs)
 	Expect(err).NotTo(HaveOccurred(), `{"FailReason": "Failed to encode security groups"}`)
 
-	Eventually(Cf("create-security-group", securityGroupName, sgFile.Name()), ThirtySecondTimeout).Should(gexec.Exit(0))
-	Eventually(Cf("bind-security-group", securityGroupName, orgName, spaceName), ThirtySecondTimeout).Should(gexec.Exit(0))
+	Expect(Cf("create-security-group", securityGroupName, sgFile.Name())).To(gexec.Exit(0))
+	Expect(Cf("bind-security-group", securityGroupName, orgName, spaceName)).To(gexec.Exit(0))
 }
 
 func DeleteSecurityGroup(securityGroupName string) {
-	Eventually(Cf("delete-security-group", securityGroupName, "-f"), ThirtySecondTimeout).Should(gexec.Exit(0))
-}
-
-func GetAppEnv(appName string) string {
-	appEnv := Cf("env", appName)
-	Eventually(appEnv, ThirtySecondTimeout).Should(gexec.Exit(0))
-	return string(appEnv.Buffer().Contents())
+	Expect(Cf("delete-security-group", securityGroupName, "-f")).To(gexec.Exit(0))
 }
 
 func PushAndBindApp(appName, serviceName, testAppPath string) string {
-	Eventually(Cf("push", "-f", filepath.Join(testAppPath, "manifest.yml"), "--no-start", "--random-route", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
-	Eventually(Cf("bind-service", appName, serviceName), FiveMinuteTimeout).Should(gexec.Exit(0))
-	Eventually(Cf("start", appName), FiveMinuteTimeout).Should(gexec.Exit(0))
+	Expect(Cf("push", "-f", filepath.Join(testAppPath, "manifest.yml"), "--no-start", "--random-route", appName)).To(gexec.Exit(0))
+	Expect(Cf("bind-service", appName, serviceName)).To(gexec.Exit(0))
+	Expect(Cf("start", appName)).To(gexec.Exit(0))
 
 	appDetails := Cf("app", appName)
-	Eventually(appDetails, ThirtySecondTimeout).Should(gexec.Exit(0))
+	Expect(appDetails).To(gexec.Exit(0))
 
 	appDetailsOutput := string(appDetails.Buffer().Contents())
 	testAppURL := findURL(appDetailsOutput)
@@ -87,49 +81,45 @@ func PushAndBindApp(appName, serviceName, testAppPath string) string {
 	return testAppURL
 }
 
-func DeleteApp(appName string) *gexec.Session {
-	return eventuallyWithTimeout(ThirtySecondTimeout, "delete", appName, "-f", "-r")
+func DeleteApp(appName string) {
+	Expect(Cf("delete", appName, "-f", "-r")).To(gexec.Exit(0))
 }
 
-func CreateService(serviceOffering, servicePlan, serviceName string) *gexec.Session {
-	session := eventuallyWithTimeout(FiveMinuteTimeout, "create-service", serviceOffering, servicePlan, serviceName)
+func PrintAppLogs(appName string) {
+	Expect(Cf("logs", appName, "--recent")).To(gexec.Exit(0))
+}
+
+func CreateService(serviceOffering, servicePlan, serviceName string) {
+	Expect(Cf("create-service", serviceOffering, servicePlan, serviceName)).To(gexec.Exit(0))
 	AwaitServiceAvailable(serviceName)
-	return session
 }
 
 func UpdateService(serviceName, params string) {
-	eventuallyWithTimeout(FiveMinuteTimeout, "update-service", serviceName, "-c", params)
+	Expect(Cf("update-service", serviceName, "-c", params)).To(gexec.Exit(0))
 	AwaitServiceAvailable(serviceName)
 }
 
-func UnbindService(appName, serviceName string) *gexec.Session {
-	return eventuallyWithTimeout(FiveMinuteTimeout, "unbind-service", appName, serviceName)
+func UnbindService(appName, serviceName string) {
+	Expect(Cf("unbind-service", appName, serviceName)).To(gexec.Exit(0))
 }
 
-func DeleteService(serviceName string) *gexec.Session {
-	session := eventuallyWithTimeout(TenMinuteTimeout, "delete-service", serviceName, "-f")
+func DeleteService(serviceName string) {
+	Expect(Cf("delete-service", serviceName, "-f")).To(gexec.Exit(0))
 	AwaitServiceDeletion(serviceName)
-	return session
 }
 
 func CreateServiceKey(serviceName, keyName string) {
-	eventuallyWithTimeout(FiveMinuteTimeout, "create-service-key", serviceName, keyName)
+	Expect(Cf("create-service-key", serviceName, keyName)).To(gexec.Exit(0))
 }
 
 func DeleteServiceKey(serviceName, keyName string) {
-	eventuallyWithTimeout(FiveMinuteTimeout, "delete-service-key", "-f", serviceName, keyName)
+	Expect(Cf("delete-service-key", "-f", serviceName, keyName)).To(gexec.Exit(0))
 }
 
 func GetServiceKey(serviceName, keyName string) []byte {
-	getKey := Cf("service-key", serviceName, keyName)
-	Eventually(getKey, FiveMinuteTimeout).Should(gexec.Exit(0))
-	return getKey.Buffer().Contents()
-}
-
-func eventuallyWithTimeout(timeout time.Duration, args ...string) *gexec.Session {
-	session := Cf(args...)
-	Eventually(session, timeout).Should(gexec.Exit(0))
-	return session
+	session := Cf("service-key", serviceName, keyName)
+	Expect(session).To(gexec.Exit(0))
+	return session.Buffer().Contents()
 }
 
 func findURL(cliOutput string) string {

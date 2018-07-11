@@ -15,6 +15,7 @@ var _ = Describe("Smoke tests", func() {
 	const appPath = "../assets/rabbit-example-app"
 
 	AfterEach(func() {
+		helper.PrintAppLogs(appName)
 		helper.DeleteApp(appName)
 	})
 
@@ -22,6 +23,11 @@ var _ = Describe("Smoke tests", func() {
 		return func() {
 			serviceName := fmt.Sprintf("rmq-smoke-test-instance-%s", uuid.New()[:18])
 			helper.CreateService(testConfig.ServiceOffering, planName, serviceName)
+
+			defer func() {
+				By("deleting the service instance")
+				helper.DeleteService(serviceName)
+			}()
 
 			if useTLS && testConfig.ServiceOffering == "p.rabbitmq" {
 				By("enabling TLS")
@@ -31,16 +37,6 @@ var _ = Describe("Smoke tests", func() {
 			By("pushing and binding an app")
 			appURL := helper.PushAndBindApp(appName, serviceName, appPath)
 
-			By("RabbitMQ protocol")
-			appEnv := helper.GetAppEnv(appName)
-			if useTLS {
-				Expect(appEnv).To(ContainSubstring("amqps://"), "bind should expose amqps protocol")
-				Expect(appEnv).ToNot(ContainSubstring("amqp://"), "bind should not expose amqp protocol")
-			} else {
-				Expect(appEnv).ToNot(ContainSubstring("amqps://"), "bind should not expose amqps protocol")
-				Expect(appEnv).To(ContainSubstring("amqp://"), "bind should expose amqp protocol")
-			}
-
 			By("sending and receiving rabbit messages")
 			queue := fmt.Sprintf("%s-queue", appName)
 
@@ -49,9 +45,8 @@ var _ = Describe("Smoke tests", func() {
 			Expect(helper.ReceiveMessage(appURL, queue)).To(Equal("foo"))
 			Expect(helper.ReceiveMessage(appURL, queue)).To(Equal("bar"))
 
+			By("unbinding the app")
 			helper.UnbindService(appName, serviceName)
-
-			helper.DeleteService(serviceName)
 		}
 	}
 

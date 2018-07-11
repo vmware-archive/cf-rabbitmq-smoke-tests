@@ -37,7 +37,7 @@ func ReceiveMessage(testAppURL, queueName string) string {
 
 func makeAndCheckHttpRequest(req *http.Request) string {
 	client := &http.Client{
-		Timeout: ThirtySecondTimeout,
+		Timeout: 30 * time.Second,
 		Transport: &http.Transport{
 			Dial: (&net.Dialer{
 				Timeout:   30 * time.Second,

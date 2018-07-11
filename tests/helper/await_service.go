@@ -13,11 +13,8 @@ import (
 )
 
 const (
-	FiveSecondTimeout   time.Duration = time.Second * 5
-	ThirtySecondTimeout time.Duration = time.Second * 30
-	FiveMinuteTimeout   time.Duration = time.Minute * 5
-	TenMinuteTimeout    time.Duration = time.Minute * 10
-	ThirtyMinuteTimeout time.Duration = time.Minute * 30
+	FiveSecondTimeout   = 5 * time.Second
+	ThirtyMinuteTimeout = 30 * time.Minute
 )
 
 var succeededMatcher = regexp.MustCompile(`(?im)^\s*status\s*:\s+(create|update)\s+succeeded\s*$`)
@@ -30,7 +27,7 @@ var succeededMatcher = regexp.MustCompile(`(?im)^\s*status\s*:\s+(create|update)
 func AwaitServiceAvailable(serviceName string) {
 	Eventually(func() bool {
 		session := Cf("service", serviceName)
-		Eventually(session, FiveMinuteTimeout).Should(gexec.Exit(0))
+		Expect(session).To(gexec.Exit(0))
 
 		contents := session.Buffer().Contents()
 		if succeededMatcher.Match(contents) {
@@ -51,7 +48,7 @@ func AwaitServiceAvailable(serviceName string) {
 func AwaitServiceDeletion(serviceName string) {
 	Eventually(func() bool {
 		session := Cf("services")
-		Eventually(session, TenMinuteTimeout).Should(gexec.Exit(0))
+		Expect(session).To(gexec.Exit(0))
 
 		contents := session.Buffer().Contents()
 		if !bytes.Contains(contents, []byte(serviceName)) {
