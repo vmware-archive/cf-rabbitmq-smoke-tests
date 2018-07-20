@@ -70,7 +70,10 @@ func PushAndBindApp(appName, serviceName, testAppPath string) string {
 	Expect(Cf("push", "-f", filepath.Join(testAppPath, "manifest.yml"), "--no-start", "--random-route", appName)).To(gexec.Exit(0))
 	Expect(Cf("bind-service", appName, serviceName)).To(gexec.Exit(0))
 	Expect(Cf("start", appName)).To(gexec.Exit(0))
+	return LookupAppURL(appName)
+}
 
+func LookupAppURL(appName string) string {
 	appDetails := Cf("app", appName)
 	Expect(appDetails).To(gexec.Exit(0))
 
